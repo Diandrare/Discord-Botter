@@ -38,7 +38,7 @@ export async function generateFoxReply(userPrompt: string): Promise<string> {
   const ai = getClient();
 
   const response = await ai.models.generateContent({
-    model: "gemini-2.5-flash",
+    model: "gemini-2.0-flash",
     contents: userPrompt,
     config: {
       systemInstruction: FOX_SYSTEM_PROMPT,
