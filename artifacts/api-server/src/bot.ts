@@ -27,9 +27,9 @@ export function startBot(): void {
     return;
   }
 
-  const geminiKey = process.env["GEMINI_API_KEY"];
-  if (!geminiKey) {
-    logger.warn("GEMINI_API_KEY is not set — Fox AI chat will be disabled");
+  const groqKey = process.env["GROQ_API_KEY"];
+  if (!groqKey) {
+    logger.warn("GROQ_API_KEY is not set — Fox AI chat will be disabled");
   }
 
   const client = new Client({
