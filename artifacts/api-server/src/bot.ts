@@ -1,4 +1,11 @@
-import { Client, Events, GatewayIntentBits, type GuildMember, type PartialGuildMember } from "discord.js";
+import {
+  ActivityType,
+  Client,
+  Events,
+  GatewayIntentBits,
+  type GuildMember,
+  type PartialGuildMember,
+} from "discord.js";
 import { logger } from "./lib/logger";
 
 const FOX_PEOPLE_ROLE_NAME = "Fox People";
@@ -20,8 +27,49 @@ export function startBot(): void {
 
   client.once(Events.ClientReady, (readyClient) => {
     logger.info({ tag: readyClient.user.tag }, "Discord bot is ready");
+    
+  const statuses = [
+  {
+    name: "Doomestic",
+    type: ActivityType.Watching,
+  },
+  {
+    name: "Fox",
+    type: ActivityType.Playing,
+  },
+  {
+    name: "Miaww",
+    type: ActivityType.Listening,
+  },
+  {
+    name: "Doomestic Bot",
+    type: ActivityType.Watching,
+  },
+  {
+    name: "the Night",
+    type: ActivityType.Watching,
+  },
+];
+
+let index = 0;
+
+setInterval(() => {
+  readyClient.user.setPresence({
+    activities: [statuses[index]],
+    status: "online",
   });
 
+  index = (index + 1) % statuses.length;
+}, 15000);
+
+// Status pertama saat bot online
+readyClient.user.setPresence({
+  activities: [statuses[0]],
+  status: "online",
+});
+
+});
+  
   client.on(Events.GuildMemberUpdate, async (
     oldMember: GuildMember | PartialGuildMember,
     newMember: GuildMember,
@@ -62,7 +110,7 @@ export function startBot(): void {
     }
   });
 
-  client.login(token).catch((err: unknown) => {
+    client.login(token).catch((err: unknown) => {
     logger.error({ err }, "Discord bot failed to log in");
   });
 }
