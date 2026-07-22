@@ -8,6 +8,7 @@ import {
 } from "discord.js";
 import { logger } from "./lib/logger";
 import { handleMessage } from "./fox/handler";
+import { setupVoice } from "./fox/voice";
 
 const FOX_PEOPLE_ROLE_NAME = "Fox People";
 const UNVERIFIED_ROLE_NAME = "Unverified";
@@ -59,6 +60,11 @@ export function startBot(): void {
         status: "online",
       });
     }, 15_000);
+
+    // Join voice channel 24/7
+    setupVoice(readyClient).catch((err: unknown) => {
+      logger.error({ err }, "Failed to set up voice");
+    });
   });
 
   // ── Role management: remove Unverified when Fox People is granted ────────
