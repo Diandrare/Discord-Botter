@@ -4,8 +4,65 @@ import {
   type TextChannel,
 } from "discord.js";
 import { logger } from "../lib/logger";
-import { generateFoxReply } from "./gemini";
+import { type ChatMessage, generateFoxReply } from "./gemini";
 import { detectGreeting } from "./greetings";
+
+// ── Conversation memory ────────────────────────────────────────────────────────
+
+interface ConversationEntry {
+  messages: ChatMessage[];
+  lastActivity: number;
+}
+
+/**
+ * Per-channel conversation history.
+ * Keyed by channel ID (or "DM:<userId>" for DMs).
+ */
+const conversations = new Map<string, ConversationEntry>();
+
+const MAX_HISTORY = 14;          // messages kept per channel (7 turns)
+const HISTORY_TTL_MS = 30 * 60 * 1000; // 30 minutes idle → clear
+
+function conversationKey(message: Message): string {
+  if (message.channel.type === ChannelType.DM) {
+    return `DM:${message.author.id}`;
+  }
+  return message.channel.id;
+}
+
+function getHistory(message: Message): ChatMessage[] {
+  const key = conversationKey(message);
+  const entry = conversations.get(key);
+  if (!entry) return [];
+
+  // Expired — wipe it
+  if (Date.now() - entry.lastActivity > HISTORY_TTL_MS) {
+    conversations.delete(key);
+    return [];
+  }
+
+  return entry.messages;
+}
+
+function pushHistory(message: Message, userText: string, assistantText: string): void {
+  const key = conversationKey(message);
+  const entry = conversations.get(key) ?? { messages: [], lastActivity: 0 };
+
+  entry.messages.push(
+    { role: "user", content: userText },
+    { role: "assistant", content: assistantText },
+  );
+
+  // Trim to last MAX_HISTORY messages
+  if (entry.messages.length > MAX_HISTORY) {
+    entry.messages = entry.messages.slice(-MAX_HISTORY);
+  }
+
+  entry.lastActivity = Date.now();
+  conversations.set(key, entry);
+}
+
+// ── Helpers ───────────────────────────────────────────────────────────────────
 
 /** Strip bot mention tags from content */
 function stripMentions(content: string): string {
@@ -21,6 +78,8 @@ function buildContextHeader(message: Message): string {
       : "DM";
   return `[Username: ${username}, Channel: ${channelName}]`;
 }
+
+// ── Main handler ──────────────────────────────────────────────────────────────
 
 export async function handleMessage(message: Message): Promise<void> {
   // Never reply to bots
@@ -70,8 +129,12 @@ export async function handleMessage(message: Message): Promise<void> {
       await message.channel.sendTyping();
     }
 
-    const reply = await generateFoxReply(prompt);
+    const history = getHistory(message);
+    const reply = await generateFoxReply(prompt, history);
     await message.reply(reply);
+
+    // Save this turn to memory
+    pushHistory(message, prompt, reply);
 
     logger.info(
       { userId: message.author.id, channel: buildContextHeader(message) },
@@ -80,11 +143,8 @@ export async function handleMessage(message: Message): Promise<void> {
   } catch (err) {
     logger.error({ err, userId: message.author.id }, "Fox failed to reply");
 
-    // Graceful fallback — never crash silently
     await message
-      .reply(
-        "🦊 Hmm, sepertinya ada sesuatu yang mengganggu. Coba lagi nanti ya~ 🤍",
-      )
+      .reply("🦊 Hmm, ada sesuatu yang sedikit mengganggu Fox tadi... coba lagi nanti ya~ 🤍")
       .catch(() => undefined);
   }
 }

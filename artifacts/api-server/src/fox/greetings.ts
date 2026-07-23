@@ -1,15 +1,17 @@
 export interface GreetingMatch {
-  type: "pagi" | "siang" | "sore" | "malam" | "morning" | "night";
+  type: "pagi" | "siang" | "sore" | "malam" | "morning" | "afternoon" | "evening" | "night";
   original: string;
 }
 
 const GREETING_PATTERNS: Array<{ pattern: RegExp; type: GreetingMatch["type"] }> = [
-  { pattern: /\bselamat pagi\b/i, type: "pagi" },
-  { pattern: /\bselamat siang\b/i, type: "siang" },
-  { pattern: /\bselamat sore\b/i, type: "sore" },
-  { pattern: /\bselamat malam\b/i, type: "malam" },
-  { pattern: /\bgood morning\b/i, type: "morning" },
-  { pattern: /\bgood night\b/i, type: "night" },
+  { pattern: /\bselamat pagi\b/i,    type: "pagi" },
+  { pattern: /\bselamat siang\b/i,   type: "siang" },
+  { pattern: /\bselamat sore\b/i,    type: "sore" },
+  { pattern: /\bselamat malam\b/i,   type: "malam" },
+  { pattern: /\bgood morning\b/i,    type: "morning" },
+  { pattern: /\bgood afternoon\b/i,  type: "afternoon" },
+  { pattern: /\bgood evening\b/i,    type: "evening" },
+  { pattern: /\bgood night\b/i,      type: "night" },
 ];
 
 /**

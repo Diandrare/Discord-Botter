@@ -15,7 +15,7 @@ import path from "node:path";
 import { createRequire } from "node:module";
 import { logger } from "../lib/logger";
 
-const VOICE_CHANNEL_NAME = "Nobar";
+const VOICE_CHANNEL_NAME = "DOOMESTIC";
 const STREAM_URL = "https://youtu.be/8KY6ZE44scQ?si=wzWWhVjPTl0Wj4Mb";
 const RECONNECT_DELAY_MS = 5_000;
 const CHANNEL_RETRY_DELAY_MS = 30_000;
@@ -31,8 +31,10 @@ async function startStream(player: AudioPlayer): Promise<void> {
   try {
     const ytdlp = spawn(YTDLP_BIN, [
       STREAM_URL,
-      "--format", "bestaudio",
-      "--output", "-",
+      "--format",
+      "bestaudio",
+      "--output",
+      "-",
       "--quiet",
       "--no-playlist",
     ]);
@@ -54,7 +56,10 @@ async function startStream(player: AudioPlayer): Promise<void> {
     logger.info({ channel: VOICE_CHANNEL_NAME }, "Fox started streaming audio");
   } catch (err) {
     logger.error({ err }, "Failed to start audio stream — retrying in 5s");
-    setTimeout(() => startStream(player).catch(() => undefined), RECONNECT_DELAY_MS);
+    setTimeout(
+      () => startStream(player).catch(() => undefined),
+      RECONNECT_DELAY_MS,
+    );
   }
 }
 
@@ -115,8 +120,14 @@ async function connect(client: Client): Promise<void> {
     const now = Date.now();
     if (now - lastErrorAt < 10_000) return;
     lastErrorAt = now;
-    logger.error({ err: err.message }, "Audio player error — restarting stream");
-    setTimeout(() => startStream(player).catch(() => undefined), RECONNECT_DELAY_MS);
+    logger.error(
+      { err: err.message },
+      "Audio player error — restarting stream",
+    );
+    setTimeout(
+      () => startStream(player).catch(() => undefined),
+      RECONNECT_DELAY_MS,
+    );
   });
 
   // Handle voice disconnects
