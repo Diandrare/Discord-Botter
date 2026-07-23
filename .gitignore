@@ -47,3 +47,6 @@ Thumbs.db
 # Replit
 .cache/
 .local/
+
+# Bot runtime data (warnings, etc.) — do not commit
+artifacts/api-server/data/
